@@ -9,16 +9,11 @@ class Dmm
 	/* Constants
 	-------------------------------*/
 	const SDK_VERSION = '0.0.1';
+	const REFER_NOMAL = 'DMM.com';
+	const REFER_ADULT = 'DMM.co.jp'
 
 	/* Public Properties
 	-------------------------------*/
-	public static $CURL_OPTS = array(
-		CURLOPT_CONNECTTIMEOUT => 10,
-		CURLOPT_RETURNTRANSFER => TRUE,
-		CURLOPT_TIMEOUT        => 60,
-		CURLOPT_USERAGENT      => 'dmm-sdk-0.0.1',
-	);
-
 	/* Protected Properties
 	-------------------------------*/
 	protected $_apiUrl      = 'http://affiliate-api.dmm.com/';
@@ -55,7 +50,7 @@ class Dmm
 	/**
 	 * Set the Application ID.
 	 * @param  string $appId The Application ID
-	 * @return AbstractDmm
+	 * @return Dmm
 	 */
 	public function setAppId($appId)
 	{
@@ -66,7 +61,7 @@ class Dmm
 	/**
 	 * Set the Affiliate ID.
 	 * @param  string $affiliateId The Affiliate ID
-	 * @return AbstractDmm
+	 * @return Dmm
 	 */
 	public function setAffiliateId($affiliateId)
 	{
@@ -77,11 +72,32 @@ class Dmm
 	/**
 	 * Set the API Version.
 	 * @param  floor $version The API Version
-	 * @return AbstractDmm
+	 * @return Dmm
 	 */
 	public function setVersion($version)
 	{
 		$this->_version = $version;
+		return $this;
+	}
+
+	/**
+	 * Set Keyword parameter.
+	 *
+	 * encoding to EUC-JP & set keyword parameter
+	 * DMM API request's encode is only EUC-JP
+	 *
+	 * @param  string $string keyword parameter
+	 * @return Dmm
+	 */
+	public function setKeyword($string)
+	{
+		if(!empty($string) && is_string($string))
+		{
+			$params = array(
+				'keyword' => mb_convert_encoding($string, 'EUC-JP')
+			);
+			$this->setParameters($params);
+		}
 		return $this;
 	}
 
@@ -113,6 +129,20 @@ class Dmm
 	}
 
 	/**
+	 * Get Keyword parameter.
+	 *
+	 * get keyword parameter & encoding to UTF-8
+	 * DMM API response's encode is EUC-JP
+	 *
+	 * @return string Keyword parameter
+	 */
+	public function getKeyword()
+	{
+		$params = $this->_params;
+		return (isset($params['keyword'])) ? mb_convert_encoding($params['keyword'], 'UTF-8') : NULL;
+	}
+
+	/**
 	 * set API parameters
 	 * @param array $params API parameters
 	 * @return  Dmm
@@ -133,12 +163,32 @@ class Dmm
 	}
 
 	/**
+	 * set the refer site. (Adult items)
+	 * @return Dmm
+	 */
+	public function referAdult()
+	{
+		$this->_site = static::REFER_ADULT;
+		return $this;
+	}
+
+	/**
+	 * set the refer site. (Nomal items)
+	 * @return Dmm
+	 */
+	public function referNomal()
+	{
+		$this->_site = static::REFER_NOMAL;
+		return $this;
+	}
+
+	/**
 	 * API request
 	 * @param  array  $params API parameters
-	 * @param  string $format Response format
+	 * @param  string $to_format Response format
 	 * @return mixed API response
 	 */
-	public function api($params=array(), $format='array')
+	public function api($params=array(), $to_format='array')
 	{
 		// default parameters
 		$this->setParameters(array(
@@ -158,7 +208,12 @@ class Dmm
 			$this->_getUrl($this->getParameters())
 		);
 
-		return $api_response;
+		if($to_format == 'json')
+		{
+			$api_response = json_encode($api_response);
+		}
+
+		return $this->_formatResponse($api_response, $to_format);
 	}
 
 	/* Protected Methods
@@ -198,11 +253,75 @@ class Dmm
 		// encoding from EUC-JP to UTF-8
 		mb_convert_encoding($response,"UTF-8");
 
-		$xml = simplexml_load_string($response);
-
-		return json_decode(json_encode($xml), TRUE);
+		return _remapArray(simplexml_load_string($response));
 	}
 
 	/* Private Methods
 	-------------------------------*/
+	/**
+	 * encode object to array & remap
+	 * @param  object $obj xml element 
+	 * @return array
+	 */
+	private function _remapArray($obj)
+	{
+		$arr = array();
+		if(is_object($obj))
+		{
+			$obj = get_object_vars($obj);
+		}
+
+		foreach($obj as $key => $val)
+		{
+			if(is_object($obj[$key]))
+			{
+				$arr[$key] = _remapArray($val);
+			}
+			elseif(is_array($val))
+			{
+				foreach($val as $k => $v)
+				{
+					if(is_object($v) || is_array($v))
+					{
+						$arr[$key][$k] = _remapArray($v);
+					}
+					else
+					{
+						$arr[$key][$k] = $v;
+					}
+				}
+			}
+			else
+			{
+				$arr[$key] = $val;
+			}
+		}
+		return $arr;
+	}
+
+	/**
+	 * format response parameter
+	 * @param  mixed  $params
+	 * @param  string $to_format 
+	 * @return mixed
+	 */
+	private function _formatResponse($params, $to_format='array')
+	{
+		if($to_format == 'json')
+		{
+			$result = json_encode($params);
+		}
+		else
+		{
+			if(is_object($params))
+			{
+				$result = $this->_remapArray($params);
+			}
+			else
+			{
+				$result = $params;
+			}
+		}
+		return $result;
+	}
 }
