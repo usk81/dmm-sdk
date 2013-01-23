@@ -161,36 +161,6 @@ class Dmm
 		return $api_response;
 	}
 
-	public function xml2array(&$xml, $isRoot=TRUE)
-	{
-		if($isRoot)
-		{
-			return array($sxml->getName() => array(xml2array($xml, FALSE)));
-		}
-
-		$r = array();
-		foreach ($xml->children() as $cld)
-		{
-			$a = $r[(string)$cld->getName()];
-			$a = &$a[count($a)];
-
-			if (count($cld->children()) == 0)
-			{
-				$a['_value'] = (string)$cld;
-			}
-			else
-			{
-				$a = xml2array($cld, FALSE);
-			}
-
-			foreach($cld->attributes() as $at)
-			{
-				$a['_attr'][(string)$at->getName()] = (string)$at;
-			}
-		}
-		return $r;
-	}
-
 	/* Protected Methods
 	-------------------------------*/
 	/**
@@ -230,9 +200,7 @@ class Dmm
 
 		$xml = simplexml_load_string($response);
 
-		$result = xml2array($xml);
-
-		return $result;
+		return json_decode(json_encode($xml), TRUE);
 	}
 
 	/* Private Methods

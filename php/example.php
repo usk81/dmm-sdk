@@ -9,4 +9,4 @@ $dmm = new Dmm(array(
 
 $result = $dmm->api();
 
-echo $result;
+var_dump($result);
