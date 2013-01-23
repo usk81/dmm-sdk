@@ -10,7 +10,7 @@ class Dmm
 	-------------------------------*/
 	const SDK_VERSION = '0.0.1';
 	const REFER_NOMAL = 'DMM.com';
-	const REFER_ADULT = 'DMM.co.jp'
+	const REFER_ADULT = 'DMM.co.jp';
 
 	/* Public Properties
 	-------------------------------*/
