@@ -253,7 +253,7 @@ class Dmm
 		// encoding from EUC-JP to UTF-8
 		mb_convert_encoding($response,"UTF-8");
 
-		return _remapArray(simplexml_load_string($response));
+		return $this->_remapArray(simplexml_load_string($response));
 	}
 
 	/* Private Methods
@@ -275,7 +275,7 @@ class Dmm
 		{
 			if(is_object($obj[$key]))
 			{
-				$arr[$key] = _remapArray($val);
+				$arr[$key] = $this->_remapArray($val);
 			}
 			elseif(is_array($val))
 			{
@@ -283,7 +283,7 @@ class Dmm
 				{
 					if(is_object($v) || is_array($v))
 					{
-						$arr[$key][$k] = _remapArray($v);
+						$arr[$key][$k] = $this->_remapArray($v);
 					}
 					else
 					{
