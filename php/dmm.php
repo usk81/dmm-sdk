@@ -138,7 +138,7 @@ class Dmm
 	 * @param  string $format Response format
 	 * @return mixed API response
 	 */
-	public function api($params=array(), $format='xml')
+	public function api($params=array(), $format='array')
 	{
 		// default parameters
 		$this->setParameters(array(
@@ -161,6 +161,36 @@ class Dmm
 		return $api_response;
 	}
 
+	public function xml2array(&$xml, $isRoot=TRUE)
+	{
+		if($isRoot)
+		{
+			return array($sxml->getName() => array(xml2array($xml, FALSE)));
+		}
+
+		$r = array();
+		foreach ($xml->children() as $cld)
+		{
+			$a = $r[(string)$cld->getName()];
+			$a = &$a[count($a)];
+
+			if (count($cld->children()) == 0)
+			{
+				$a['_value'] = (string)$cld;
+			}
+			else
+			{
+				$a = xml2array($cld, FALSE);
+			}
+
+			foreach($cld->attributes() as $at)
+			{
+				$a['_attr'][(string)$at->getName()] = (string)$at;
+			}
+		}
+		return $r;
+	}
+
 	/* Protected Methods
 	-------------------------------*/
 	/**
@@ -180,41 +210,28 @@ class Dmm
 	}
 
 	/**
-	 * [_apiRequest description]
-	 * @param  string $url    request url
-	 * @param  arrat  $params post parameters
-	 * @param  object $ch     [description]
+	 * API Request
+	 *
+	 * This function does not use cURL.
+	 * Because DMM API response format is only XML.
+	 * 
+	 * @param  string $url request url
 	 * @return mixed
 	 */
-	protected function _apiRequest($url, $params=NULL, $ch=NULL)
+	protected function _apiRequest($url)
 	{
-		if(!$ch)
+		if(! $response = file_get_contents($url))
 		{
-			$ch = curl_init();
+			return array('message' => 'Can not get response');
 		}
 
-		$opt = self::$CURL_OPTS;
-		if($params)
-		{
-			$opts[CURLOPT_POSTFIELDS] = http_build_query($params, NULL, '&');	
-		}
-		$opts[CURLOPT_URL] = $url;
+		// encoding from EUC-JP to UTF-8
+		mb_convert_encoding($response,"UTF-8");
 
-		if(isset($opts[CURLOPT_HTTPHEADER]))
-		{
-			$existing_headers = $opts[CURLOPT_HTTPHEADER];
-			$existing_headers[] = 'Expect:';
-			$opts[CURLOPT_HTTPHEADER] = $existing_headers;
-		}
-		else
-		{
-			$opts[CURLOPT_HTTPHEADER] = array('Expect:');
-		}
+		$xml = simplexml_load_string($response);
 
-		curl_setopt_array($ch, $opts);
-		$result = curl_exec($ch);
+		$result = xml2array($xml);
 
-		curl_close($ch);
 		return $result;
 	}
 
