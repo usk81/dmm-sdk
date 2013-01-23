@@ -10,4 +10,3 @@ $dmm = new Dmm(array(
 $result = $dmm->api();
 
 echo $result;
-}
