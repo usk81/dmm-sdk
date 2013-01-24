@@ -8,7 +8,7 @@ class Dmm
 {
 	/* Constants
 	-------------------------------*/
-	const SDK_VERSION = '0.0.1';
+	const SDK_VERSION = '0.1.0'; // number means (major).(minor).(fix)
 	const REFER_NOMAL = 'DMM.com';
 	const REFER_ADULT = 'DMM.co.jp';
 
