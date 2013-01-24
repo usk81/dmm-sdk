@@ -253,7 +253,8 @@ class Dmm
 		// encoding from EUC-JP to UTF-8
 		mb_convert_encoding($response,"UTF-8");
 
-		return $this->_remapArray(simplexml_load_string($response));
+		$result = $this->_remapArray(simplexml_load_string($response));
+		return (isset($result['result'])) ? $result['result'] : $result;
 	}
 
 	/* Private Methods
