@@ -1,6 +1,6 @@
 <?php
 /**
- * [class description]
+ * DMM Unofficial PHP SDK
  *
  * @category Library
  */
@@ -204,6 +204,11 @@ class Dmm
 
 		$this->setParameters($params);
 
+		if(! $this->_validateAffiliateId($this->_params['affiliateId']))
+		{
+			return FALSE;
+		}
+
 		$api_response = $this->_apiRequest(
 			$this->_getUrl($this->getParameters())
 		);
@@ -218,6 +223,11 @@ class Dmm
 
 	/* Protected Methods
 	-------------------------------*/
+	protected function _validateAffiliateId($affiliateId)
+	{
+		return preg_match('/^[0-9]{1,}-99[0-9]{1}$/', $affiliateId);
+	}
+
 	/**
 	 * [_getUrl description]
 	 * @param  array  $params [description]
