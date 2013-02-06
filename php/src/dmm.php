@@ -204,7 +204,7 @@ class Dmm
 
 		$this->setParameters($params);
 
-		if(! $this->_validateAffiliateId($this->_params['affiliateId']))
+		if(! $this->_validateAffiliateId($this->_params['affiliate_id']))
 		{
 			return FALSE;
 		}
