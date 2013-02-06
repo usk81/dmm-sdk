@@ -1,6 +1,6 @@
 <?php
 
-require_once 'dmm.php';
+require_once 'src/dmm.php';
 
 $dmm = new Dmm(array(
 	'appId'       => 'xxxxxxxxxxxxx',
